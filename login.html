@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>临沂文旅导航系统 - 用户登录</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e5799 0%, #2989d8 50%, #207cca 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-container {
+            width: 400px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            animation: fadeIn 0.5s ease-in-out;
+            position: relative;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-header {
+            background: #4CAF50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .login-header h2 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .login-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .login-logo {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .login-logo i {
+            color: #4CAF50;
+            font-size: 30px;
+        }
+
+        .login-body {
+            padding: 30px;
+        }
+
+        .user-type-selector {
+            display: flex;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-type {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .user-type:first-child {
+            border-right: 1px solid #ddd;
+        }
+
+        .user-type.active {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .user-type i {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .input-with-icon {
+            position: relative;
+        }
+
+        .input-with-icon i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #777;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+            outline: none;
+        }
+
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+        }
+
+        .remember-me input {
+            margin-right: 5px;
+        }
+
+        .forgot-password {
+            color: #4CAF50;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-login:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .login-footer {
+            text-align: center;
+            padding: 15px;
+            border-top: 1px solid #eee;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .login-footer a {
+            color: #4CAF50;
+            text-decoration: none;
+        }
+
+        .login-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            color: #f44336;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            animation: modalFadeIn 0.3s;
+            position: relative;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .modal-header h3 {
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            text-align: right;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 20px;
+            cursor: pointer;
+            color: #777;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+
+        .btn-secondary {
+            background-color: #f5f5f5;
+            color: #333;
+            margin-right: 10px;
+        }
+
+        .btn-secondary:hover {
+            background-color: #e0e0e0;
+        }
+
+        .verification-code {
+            display: flex;
+            gap: 10px;
+        }
+
+        .verification-code input {
+            flex: 1;
+        }
+
+        .verification-code .btn {
+            width: 120px;
+        }
+
+        .success-message {
+            color: #4CAF50;
+            text-align: center;
+            margin-top: 15px;
+            font-weight: bold;
+            display: none;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 480px) {
+            .login-container {
+                width: 90%;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="login-logo">
+                <i class="fas fa-map-marked-alt"></i>
+            </div>
+            <h2>临沂文旅导航系统</h2>
+            <p>欢迎登录，探索临沂之美</p>
+        </div>
+
+        <div class="login-body">
+            <div class="user-type-selector">
+                <div class="user-type active" data-type="tourist">
+                    <i class="fas fa-user"></i>
+                    <span>登录</span>
+                </div>
+              
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="username" class="form-control" placeholder="请输入用户名" required>
+                    </div>
+                    <div class="error-message" id="username-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" class="form-control" placeholder="请输入密码" required>
+                    </div>
+                    <div class="error-message" id="password-error"></div>
+                </div>
+
+                <div class="remember-forgot">
+                    <div class="remember-me">
+                        <input type="checkbox" id="remember">
+                        <label for="remember">记住我</label>
+                    </div>
+                    <a href="#" class="forgot-password" id="forgot-password-link">忘记密码?</a>
+                </div>
+
+                <button type="submit" class="btn-login">登 录</button>
+            </form>
+        </div>
+
+        <div class="login-footer">
+            还没有账号? <a href="#" id="register-link">立即注册</a>
+        </div>
+    </div>
+
+    <!-- 注册模态框 -->
+    <div class="modal" id="register-modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-register">&times;</span>
+            <div class="modal-header">
+                <h3>注册新账号</h3>
+                <p>加入我们，探索临沂文旅资源</p>
+            </div>
+            <div class="modal-body">
+                <form id="register-form">
+                    <div class="form-group">
+                        <label for="reg-username">用户名</label>
+                        <input type="text" id="reg-username" class="form-control" placeholder="4-16位字母或数字" required>
+                        <div class="error-message" id="reg-username-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reg-phone">手机号码</label>
+                        <input type="tel" id="reg-phone" class="form-control" placeholder="请输入手机号码" required>
+                        <div class="error-message" id="reg-phone-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reg-password">密码</label>
+                        <input type="password" id="reg-password" class="form-control" placeholder="6-20位字符" required>
+                        <div class="error-message" id="reg-password-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reg-confirm-password">确认密码</label>
+                        <input type="password" id="reg-confirm-password" class="form-control" placeholder="再次输入密码"
+                            required>
+                        <div class="error-message" id="reg-confirm-password-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reg-verification-code">验证码</label>
+                        <div class="verification-code">
+                            <input type="text" id="reg-verification-code" class="form-control" placeholder="输入验证码"
+                                required>
+                            <button type="button" class="btn btn-secondary" id="send-code-btn">获取验证码</button>
+                        </div>
+                        <div class="error-message" id="reg-code-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="remember-me">
+                            <input type="checkbox" id="agree-terms" required>
+                            <label for="agree-terms">我已阅读并同意<a href="#" style="color: #4CAF50;">《用户协议》</a></label>
+                        </div>
+                        <div class="error-message" id="terms-error"></div>
+                    </div>
+
+                    <div class="success-message" id="register-success">
+                        注册成功！即将跳转到登录页面...
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancel-register">取消</button>
+                <button type="button" class="btn btn-primary" id="submit-register">注册</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 找回密码模态框 -->
+    <div class="modal" id="forgot-password-modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-forgot">&times;</span>
+            <div class="modal-header">
+                <h3>找回密码</h3>
+                <p>请输入您的账号信息重置密码</p>
+            </div>
+            <div class="modal-body">
+                <form id="forgot-password-form">
+                    <div class="form-group">
+                        <label for="forgot-username">用户名</label>
+                        <input type="text" id="forgot-username" class="form-control" placeholder="请输入您的用户名" required>
+                        <div class="error-message" id="forgot-username-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="forgot-phone">手机号码</label>
+                        <input type="tel" id="forgot-phone" class="form-control" placeholder="请输入注册时使用的手机号" required>
+                        <div class="error-message" id="forgot-phone-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="forgot-verification-code">验证码</label>
+                        <div class="verification-code">
+                            <input type="text" id="forgot-verification-code" class="form-control" placeholder="输入验证码"
+                                required>
+                            <button type="button" class="btn btn-secondary" id="send-forgot-code-btn">获取验证码</button>
+                        </div>
+                        <div class="error-message" id="forgot-code-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="new-password">新密码</label>
+                        <input type="password" id="new-password" class="form-control" placeholder="6-20位字符" required>
+                        <div class="error-message" id="new-password-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirm-new-password">确认新密码</label>
+                        <input type="password" id="confirm-new-password" class="form-control" placeholder="再次输入新密码"
+                            required>
+                        <div class="error-message" id="confirm-new-password-error"></div>
+                    </div>
+
+                    <div class="success-message" id="reset-success">
+                        密码重置成功！请使用新密码登录
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancel-forgot">取消</button>
+                <button type="button" class="btn btn-primary" id="submit-reset">重置密码</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // 用户类型切换
+            const userTypes = document.querySelectorAll('.user-type');
+            userTypes.forEach(type => {
+                type.addEventListener('click', function () {
+                    userTypes.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    console.log('切换用户类型:', this.dataset.type);
+                });
+            });
+
+            // 表单验证
+            const loginForm = document.getElementById('loginForm');
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const usernameError = document.getElementById('username-error');
+            const passwordError = document.getElementById('password-error');
+
+            loginForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                // 重置错误信息
+                usernameError.style.display = 'none';
+                passwordError.style.display = 'none';
+
+                let isValid = true;
+
+                // 验证用户名
+                if (usernameInput.value.trim() === '') {
+                    usernameError.textContent = '请输入用户名';
+                    usernameError.style.display = 'block';
+                    isValid = false;
+                } else if (usernameInput.value.trim().length < 4) {
+                    usernameError.textContent = '用户名至少4个字符';
+                    usernameError.style.display = 'block';
+                    isValid = false;
+                }
+
+                // 验证密码
+                if (passwordInput.value.trim() === '') {
+                    passwordError.textContent = '请输入密码';
+                    passwordError.style.display = 'block';
+                    isValid = false;
+                } else if (passwordInput.value.trim().length < 6) {
+                    passwordError.textContent = '密码至少6个字符';
+                    passwordError.style.display = 'block';
+                    isValid = false;
+                }
+
+                if (isValid) {
+                    simulateLogin();
+                }
+            });
+
+            // 注册功能
+            const registerLink = document.getElementById('register-link');
+            const registerModal = document.getElementById('register-modal');
+            const closeRegister = document.getElementById('close-register');
+            const cancelRegister = document.getElementById('cancel-register');
+
+            // 打开注册模态框
+            registerLink.addEventListener('click', function (e) {
+                e.preventDefault();
+                registerModal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            });
+
+            // 关闭注册模态框
+            function closeRegisterModal() {
+                registerModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+                // 重置表单
+                document.getElementById('register-form').reset();
+                // 隐藏错误信息
+                document.querySelectorAll('#register-form .error-message').forEach(el => {
+                    el.style.display = 'none';
+                });
+                document.getElementById('register-success').style.display = 'none';
+            }
+
+            closeRegister.addEventListener('click', closeRegisterModal);
+            cancelRegister.addEventListener('click', closeRegisterModal);
+
+            // 点击模态框外部关闭
+            registerModal.addEventListener('click', function (e) {
+                if (e.target === registerModal) {
+                    closeRegisterModal();
+                }
+            });
+
+            // 找回密码功能
+            const forgotPasswordLink = document.getElementById('forgot-password-link');
+            const forgotPasswordModal = document.getElementById('forgot-password-modal');
+            const closeForgot = document.getElementById('close-forgot');
+            const cancelForgot = document.getElementById('cancel-forgot');
+
+            // 打开找回密码模态框
+            forgotPasswordLink.addEventListener('click', function (e) {
+                e.preventDefault();
+                forgotPasswordModal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            });
+
+            // 关闭找回密码模态框
+            function closeForgotModal() {
+                forgotPasswordModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+                // 重置表单
+                document.getElementById('forgot-password-form').reset();
+                // 隐藏错误信息
+                document.querySelectorAll('#forgot-password-form .error-message').forEach(el => {
+                    el.style.display = 'none';
+                });
+                document.getElementById('reset-success').style.display = 'none';
+            }
+
+            closeForgot.addEventListener('click', closeForgotModal);
+            cancelForgot.addEventListener('click', closeForgotModal);
+
+            // 点击模态框外部关闭
+            forgotPasswordModal.addEventListener('click', function (e) {
+                if (e.target === forgotPasswordModal) {
+                    closeForgotModal();
+                }
+            });
+
+            // 注册表单验证
+            const registerForm = document.getElementById('register-form');
+            const submitRegister = document.getElementById('submit-register');
+
+            submitRegister.addEventListener('click', function () {
+                const username = document.getElementById('reg-username');
+                const phone = document.getElementById('reg-phone');
+                const password = document.getElementById('reg-password');
+                const confirmPassword = document.getElementById('reg-confirm-password');
+                const code = document.getElementById('reg-verification-code');
+                const agreeTerms = document.getElementById('agree-terms');
+
+                const usernameError = document.getElementById('reg-username-error');
+                const phoneError = document.getElementById('reg-phone-error');
+                const passwordError = document.getElementById('reg-password-error');
+                const confirmPasswordError = document.getElementById('reg-confirm-password-error');
+                const codeError = document.getElementById('reg-code-error');
+                const termsError = document.getElementById('terms-error');
+
+                // 重置错误信息
+                usernameError.style.display = 'none';
+                phoneError.style.display = 'none';
+                passwordError.style.display = 'none';
+                confirmPasswordError.style.display = 'none';
+                codeError.style.display = 'none';
+                termsError.style.display = 'none';
+
+                let isValid = true;
+
+                // 验证用户名
+                if (username.value.trim() === '') {
+                    usernameError.textContent = '请输入用户名';
+                    usernameError.style.display = 'block';
+                    isValid = false;
+                } else if (!/^[a-zA-Z0-9]{4,16}$/.test(username.value.trim())) {
+                    usernameError.textContent = '用户名必须为4-16位字母或数字';
+                    usernameError.style.display = 'block';
+                    isValid = false;
+                }
+
+                // 验证手机号
+                if (phone.value.trim() === '') {
+                    phoneError.textContent = '请输入手机号码';
+                    phoneError.style.display = 'block';
+                    isValid = false;
+                } else if (!/^1[3-9]\d{9}$/.test(phone.value.trim())) {
+                    phoneError.textContent = '请输入有效的手机号码';
+                    phoneError.style.display = 'block';
+                    isValid = false;
+                }
+
+                // 验证密码
+                if (password.value.trim() === '') {
+                    passwordError.textContent = '请输入密码';
+                    passwordError.style.display = 'block';
+                    isValid = false;
+                } else if (password.value.trim().length < 6 || password.value.trim().length > 20) {
+                    passwordError.textContent = '密码必须为6-20位字符';
+                    passwordError.style.display = 'block';
+                    isValid = false;
+                }
+
+                // 验证确认密码
+                if (confirmPassword.value.trim() === '') {
+                    confirmPasswordError.textContent = '请确认密码';
+                    confirmPasswordError.style.display = 'block';
+                    isValid = false;
+                } else if (confirmPassword.value.trim() !== password.value.trim()) {
+                    confirmPasswordError.textContent = '两次输入的密码不一致';
+                    confirmPasswordError.style.display = 'block';
+                    isValid = false;
+                }
+
+                // 验证验证码
+                if (code.value.trim() === '') {
+                    codeError.textContent = '请输入验证码';
+                    codeError.style.display = 'block';
+                    isValid = false;
+                } else if (!/^\d{6}$/.test(code.value.trim())) {
+                    codeError.textContent = '验证码必须为6位数字';
+                    codeError.style.display = 'block';
+                    isValid = false;
+                }
+
+                // 验证用户协议
+                if (!agreeTerms.checked) {
+                    termsError.textContent = '请阅读并同意用户协议';
+                    termsError.style.display = 'block';
+                    isValid = false;
+                }
+
+                if (isValid) {
+                    // 模拟注册成功
+                    document.getElementById('register-success').style.display = 'block';
+                    // 3秒后关闭模态框
+                    setTimeout(function () {
+                        closeRegisterModal();
+                        // 自动填充登录表单
+                        usernameInput.value = username.value.trim();
+                        passwordInput.value = password.value.trim();
+                    }, 3000);
+                }
+            });
+
+            // 发送验证码
+            const sendCodeBtn = document.getElementById('send-code-btn');
+            sendCodeBtn.addEventListener('click', function () {
+                const phone = document.getElementById('reg-phone');
+                const phoneError = document.getElementById('reg-phone-error');
+
+                // 验证手机号
+                if (phone.value.trim() === '') {
+                    phoneError.textContent = '请输入手机号码';
+                    phoneError.style.display = 'block';
+                    return;
+                } else if (!/^1[3-9]\d{9}$/.test(phone.value.trim())) {
+                    phoneError.textContent = '请输入有效的手机号码';
+                    phoneError.style.display = 'block';
+                    return;
+                }
+
+                // 禁用按钮并开始倒计时
+                let countdown = 60;
+                sendCodeBtn.disabled = true;
+                sendCodeBtn.textContent = `${countdown}秒后重试`;
+
+                const timer = setInterval(() => {
+                    countdown--;
+                    sendCodeBtn.textContent = `${countdown}秒后重试`;
+
+                    if (countdown <= 0) {
+                        clearInterval(timer);
+                        sendCodeBtn.disabled = false;
+                        sendCodeBtn.textContent = '获取验证码';
+                    }
+                }, 1000);
+
+                // 模拟发送验证码
+                alert(`验证码已发送至手机 ${phone.value.trim()} (模拟)`);
+            });
+
+            // 找回密码表单验证
+            const submitReset = document.getElementById('submit-reset');
+
+            submitReset.addEventListener('click', function () {
+                const username = document.getElementById('forgot-username');
+                const phone = document.getElementById('forgot-phone');
+                const code = document.getElementById('forgot-verification-code');
+                const newPassword = document.getElementById('new-password');
+                const confirmNewPassword = document.getElementById('confirm-new-password');
+
+                const usernameError = document.getElementById('forgot-username-error');
+                const phoneError = document.getElementById('forgot-phone-error');
+                const codeError = document.getElementById('forgot-code-error');
+                const newPasswordError = document.getElementById('new-password-error');
+                const confirmNewPasswordError = document.getElementById('confirm-new-password-error');
+
+                // 重置错误信息
+                usernameError.style.display = 'none';
+                phoneError.style.display = 'none';
+                codeError.style.display = 'none';
+                newPasswordError.style.display = 'none';
+                confirmNewPasswordError.style.display = 'none';
+
+                let isValid = true;
+
+                // 验证用户名
+                if (username.value.trim() === '') {
+                    usernameError.textContent = '请输入用户名';
+                    usernameError.style.display = 'block';
+                    isValid = false;
+                }
+
+                // 验证手机号
+                if (phone.value.trim() === '') {
+                    phoneError.textContent = '请输入手机号码';
+                    phoneError.style.display = 'block';
+                    isValid = false;
+                } else if (!/^1[3-9]\d{9}$/.test(phone.value.trim())) {
+                    phoneError.textContent = '请输入有效的手机号码';
+                    phoneError.style.display = 'block';
+                    isValid = false;
+                }
+
+                // 验证验证码
+                if (code.value.trim() === '') {
+                    codeError.textContent = '请输入验证码';
+                    codeError.style.display = 'block';
+                    isValid = false;
+                } else if (!/^\d{6}$/.test(code.value.trim())) {
+                    codeError.textContent = '验证码必须为6位数字';
+                    codeError.style.display = 'block';
+                    isValid = false;
+                }
+
+                // 验证新密码
+                if (newPassword.value.trim() === '') {
+                    newPasswordError.textContent = '请输入新密码';
+                    newPasswordError.style.display = 'block';
+                    isValid = false;
+                } else if (newPassword.value.trim().length < 6 || newPassword.value.trim().length > 20) {
+                    newPasswordError.textContent = '密码必须为6-20位字符';
+                    newPasswordError.style.display = 'block';
+                    isValid = false;
+                }
+
+                // 验证确认新密码
+                if (confirmNewPassword.value.trim() === '') {
+                    confirmNewPasswordError.textContent = '请确认新密码';
+                    confirmNewPasswordError.style.display = 'block';
+                    isValid = false;
+                } else if (confirmNewPassword.value.trim() !== newPassword.value.trim()) {
+                    confirmNewPasswordError.textContent = '两次输入的密码不一致';
+                    confirmNewPasswordError.style.display = 'block';
+                    isValid = false;
+                }
+
+                if (isValid) {
+                    // 模拟密码重置成功
+                    document.getElementById('reset-success').style.display = 'block';
+                    // 3秒后关闭模态框
+                    setTimeout(function () {
+                        closeForgotModal();
+                        // 自动填充登录表单
+                        usernameInput.value = username.value.trim();
+                        passwordInput.value = newPassword.value.trim();
+                    }, 3000);
+                }
+            });
+
+            // 发送找回密码验证码
+            const sendForgotCodeBtn = document.getElementById('send-forgot-code-btn');
+            sendForgotCodeBtn.addEventListener('click', function () {
+                const phone = document.getElementById('forgot-phone');
+                const phoneError = document.getElementById('forgot-phone-error');
+
+                // 验证手机号
+                if (phone.value.trim() === '') {
+                    phoneError.textContent = '请输入手机号码';
+                    phoneError.style.display = 'block';
+                    return;
+                } else if (!/^1[3-9]\d{9}$/.test(phone.value.trim())) {
+                    phoneError.textContent = '请输入有效的手机号码';
+                    phoneError.style.display = 'block';
+                    return;
+                }
+
+                // 禁用按钮并开始倒计时
+                let countdown = 60;
+                sendForgotCodeBtn.disabled = true;
+                sendForgotCodeBtn.textContent = `${countdown}秒后重试`;
+
+                const timer = setInterval(() => {
+                    countdown--;
+                    sendForgotCodeBtn.textContent = `${countdown}秒后重试`;
+
+                    if (countdown <= 0) {
+                        clearInterval(timer);
+                        sendForgotCodeBtn.disabled = false;
+                        sendForgotCodeBtn.textContent = '获取验证码';
+                    }
+                }, 1000);
+
+                // 模拟发送验证码
+                alert(`验证码已发送至手机 ${phone.value.trim()} (模拟)`);
+            });
+
+            // 模拟登录函数
+            function simulateLogin() {
+                const username = usernameInput.value.trim();
+                const password = passwordInput.value.trim();
+                const userType = document.querySelector('.user-type.active').dataset.type;
+                const rememberMe = document.getElementById('remember').checked;
+
+                // 显示加载状态
+                const loginBtn = document.querySelector('.btn-login');
+                const originalText = loginBtn.textContent;
+                loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 登录中...';
+                loginBtn.disabled = true;
+
+                // 模拟API请求延迟
+                setTimeout(function () {
+                    // 这里应该是实际的登录API调用
+                    // 示例验证逻辑（实际应用中应该通过后端验证）
+                    if ((userType === 'tourist' && password === '123456') ||
+                        (userType === 'admin' && password === 'admin123')) {
+                        // 登录成功
+                        alert(`登录成功！欢迎${userType === 'tourist' ? '游客' : '管理员'} ${username}`);
+
+                        // 如果勾选了"记住我"，保存登录状态
+                        if (rememberMe) {
+                            localStorage.setItem('rememberedUser', JSON.stringify({
+                                username: username,
+                                userType: userType
+                            }));
+                        }
+
+                        // 跳转到主页面
+                        window.location.href = 'index.html';
+                    } else {
+                        // 登录失败
+                        passwordError.textContent = '用户名或密码错误';
+                        passwordError.style.display = 'block';
+                    }
+
+                    // 恢复按钮状态
+                    loginBtn.textContent = originalText;
+                    loginBtn.disabled = false;
+                }, 1500);
+            }
+
+            // 检查是否有记住的登录信息
+            const rememberedUser = localStorage.getItem('rememberedUser');
+            if (rememberedUser) {
+                const user = JSON.parse(rememberedUser);
+                usernameInput.value = user.username;
+                document.getElementById('remember').checked = true;
+
+                // 设置用户类型
+                userTypes.forEach(t => t.classList.remove('active'));
+                document.querySelector(`.user-type[data-type="${user.userType}"]`).classList.add('active');
+            }
+        });
+    </script>
+</body>
+
+</html>

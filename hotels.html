@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>酒店推荐</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css">
+    <style>
+        .header {
+            background-color: #2c4450;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    
+        .back-btn {
+            background-color: #f5f5f5;
+            color: rgb(10, 0, 0);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+    
+        .back-btn:hover {
+            background-color: #7b878ae4;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <h1>临沂市酒店推荐</h1>
+        <button class="back-btn" onclick="window.history.back()">返回</button>
+    </header>
+
+    <div class="map-container" id="mapView"></div>
+
+    <script src="https://js.arcgis.com/4.24/"></script>
+    <script>
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/layers/FeatureLayer"
+        ], (Map, MapView, FeatureLayer) => {
+
+            const map = new Map({
+                basemap: "streets"
+            });
+
+            const view = new MapView({
+                container: "mapView",
+                map: map,
+                center: [118.35646, 35.10333],
+                zoom: 12
+            });
+
+            // 加载景点要素服务
+            const attractionsLayer = new FeatureLayer({
+                url: "https://www.geosceneonline.cn/server/rest/services/Hosted/临沂酒店/FeatureServer/0",
+                popupTemplate: {
+                    title: "{name}",
+                    content: [{
+                        type: "fields",
+                        fieldInfos: [
+                            { fieldName: "adname", label: "地区⛳" },
+                            { fieldName: "address", label: "地址🎢" },
+                            { fieldName: "tel", label: "电话📞" }
+                        ]
+                    }]
+                }
+            });
+
+            map.add(attractionsLayer);
+        });
+    </script>
+</body>
+
+</html>

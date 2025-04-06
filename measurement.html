@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>临沂文旅-空间量算系统</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css">
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+
+        #viewDiv {
+            width: 100%;
+            height: 100vh;
+        }
+
+        .control-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 999;
+        }
+
+        .control-btn {
+            padding: 8px 12px;
+            margin: 5px;
+            background: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .result-panel {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        #instruction {
+            margin-top: 10px;
+            padding: 8px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+    </style>
+    
+</head>
+
+<body>
+    <div class="control-panel">
+        <h3 style="margin-top:0;color:#1890ff">空间量算工具</h3>
+        <button id="distanceBtn" class="control-btn">📏 距离量算</button>
+        <button id="areaBtn" class="control-btn">📐 面积量算</button>
+        <button id="clearBtn" class="control-btn">🗑️ 清除</button>
+        <div id="instruction">请选择测量类型开始操作</div>
+    </div>
+
+    <div id="viewDiv"></div>
+    <div class="result-panel" id="resultPanel">
+        <span style="color:#1890ff">临沂文旅导航系统</span> | 测量结果将显示在这里
+    </div>
+
+    <script src="https://js.arcgis.com/4.24/"></script>
+    <script>
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/layers/FeatureLayer",
+            "esri/layers/GraphicsLayer",
+            "esri/Graphic",
+            "esri/geometry/Polyline",
+            "esri/geometry/Polygon",
+            "esri/geometry/support/webMercatorUtils",
+            "esri/config"
+        ], function (
+            Map, MapView, FeatureLayer,
+            GraphicsLayer, Graphic,
+            Polyline, Polygon,
+            webMercatorUtils, esriConfig
+        ) {
+            // 初始化地图
+            const map = new Map({
+                basemap: "streets"
+            });
+
+            const view = new MapView({
+                container: "viewDiv",
+                map: map,
+                center: [118.35646, 35.10333], // 临沂中心坐标
+                zoom: 12
+            });
+
+            // 设置代理（如需）
+            // esriConfig.request.proxyUrl = "/proxy/";
+
+            // 加载GeoScene景点图层
+            const attractionsLayer = new FeatureLayer({
+                url: "https://www.geosceneonline.cn/server/rest/services/Hosted/临沂/FeatureServer/0",
+                outFields: ["*"],
+                popupTemplate: {
+                    title: "{name}",
+                    content: "景区特色：{feature}<br>景区级别：{Grade}"
+                }
+            });
+            map.add(attractionsLayer);
+
+            // 量测功能实现
+            const graphicsLayer = new GraphicsLayer();
+            map.add(graphicsLayer);
+
+            let measureMode = null;
+            let measurePoints = [];
+            let measureGraphic = null;
+
+            // 距离量算
+            document.getElementById("distanceBtn").addEventListener("click", function () {
+                resetMeasurement();
+                measureMode = "distance";
+                updateInstruction("点击地图选择起点，再次点击选择终点");
+            });
+
+            // 面积量算
+            document.getElementById("areaBtn").addEventListener("click", function () {
+                resetMeasurement();
+                measureMode = "area";
+                updateInstruction("点击添加顶点，双击完成绘制");
+            });
+
+            // 清除
+            document.getElementById("clearBtn").addEventListener("click", resetMeasurement);
+
+            // 地图点击事件
+            view.on("click", function (evt) {
+                if (!measureMode) return;
+
+                const point = webMercatorUtils.xyToLngLat(evt.mapPoint.x, evt.mapPoint.y);
+                measurePoints.push(point);
+
+                if (measureMode === "distance" && measurePoints.length === 2) {
+                    completeDistanceMeasurement();
+                } else if (measureMode === "area") {
+                    updateAreaMeasurement();
+                }
+            });
+
+            // 地图双击事件（面积测量完成）
+            view.on("double-click", function () {
+                if (measureMode === "area" && measurePoints.length >= 3) {
+                    completeAreaMeasurement();
+                }
+            });
+
+            // 景点点击事件（支持直接点击景点测量）
+            view.popup.on("trigger-action", function (event) {
+                if (event.action.id === "measure-from-here" && measureMode === "distance") {
+                    const feature = view.popup.selectedFeature;
+                    const point = [
+                        feature.geometry.longitude,
+                        feature.geometry.latitude
+                    ];
+
+                    measurePoints.push(point);
+                    if (measurePoints.length === 1) {
+                        updateInstruction("已选择起点，请选择终点");
+                    } else if (measurePoints.length === 2) {
+                        completeDistanceMeasurement();
+                    }
+                }
+            });
+
+            // 更新距离测量
+            function updateDistanceMeasurement() {
+                graphicsLayer.remove(measureGraphic);
+
+                if (measurePoints.length > 1) {
+                    const polyline = new Polyline({
+                        paths: [measurePoints],
+                        spatialReference: { wkid: 4326 }
+                    });
+
+                    measureGraphic = new Graphic({
+                        geometry: polyline,
+                        symbol: {
+                            type: "simple-line",
+                            color: [56, 168, 0, 0.8],
+                            width: 3
+                        }
+                    });
+                    graphicsLayer.add(measureGraphic);
+
+                    const distance = calculateDistance(measurePoints[0], measurePoints[1]);
+                    updateResult(`距离：${distance.toFixed(2)} 米`);
+                }
+            }
+
+            // 完成距离测量
+            function completeDistanceMeasurement() {
+                updateDistanceMeasurement();
+                updateInstruction("距离测量完成");
+                measureMode = null;
+            }
+
+            // 更新面积测量
+            function updateAreaMeasurement() {
+                graphicsLayer.remove(measureGraphic);
+
+                if (measurePoints.length >= 3) {
+                    const polygon = new Polygon({
+                        rings: [measurePoints.concat([measurePoints[0]])], // 闭合多边形
+                        spatialReference: { wkid: 4326 }
+                    });
+
+                    measureGraphic = new Graphic({
+                        geometry: polygon,
+                        symbol: {
+                            type: "simple-fill",
+                            color: [56, 168, 0, 0.3],
+                            outline: {
+                                color: [56, 168, 0, 0.8],
+                                width: 2
+                            }
+                        }
+                    });
+                    graphicsLayer.add(measureGraphic);
+
+                    const area = calculateArea(measurePoints);
+                    updateResult(`面积：${area.toFixed(2)} 平方米 (${(area / 666.67).toFixed(2)} 亩)`);
+                }
+            }
+
+            // 完成面积测量
+            function completeAreaMeasurement() {
+                updateAreaMeasurement();
+                updateInstruction("面积测量完成");
+                measureMode = null;
+            }
+
+            // 计算距离（米）
+            function calculateDistance(point1, point2) {
+                const R = 6371000; // 地球半径
+                const dLat = (point2[1] - point1[1]) * Math.PI / 180;
+                const dLon = (point2[0] - point1[0]) * Math.PI / 180;
+                const a =
+                    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(point1[1] * Math.PI / 180) *
+                    Math.cos(point2[1] * Math.PI / 180) *
+                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                return R * c;
+            }
+
+            // 计算面积（平方米）
+            function calculateArea(points) {
+                let area = 0;
+                const n = points.length;
+                for (let i = 0; i < n; i++) {
+                    const j = (i + 1) % n;
+                    area += points[i][0] * points[j][1];
+                    area -= points[j][0] * points[i][1];
+                }
+                return Math.abs(area) * 111319.488 * 111319.488 / 2; // 经纬度转平面近似
+            }
+
+            // 更新操作提示
+            function updateInstruction(text) {
+                document.getElementById("instruction").innerHTML =
+                    `<span style="color:#1890ff">操作提示：</span>${text}`;
+            }
+
+            // 更新结果展示
+            function updateResult(text) {
+                document.getElementById("resultPanel").innerHTML = `
+                    <span style="color:#1890ff">📏 测量结果</span><br>
+                    ${text}
+                `;
+            }
+
+            // 重置测量
+            function resetMeasurement() {
+                measureMode = null;
+                measurePoints = [];
+                graphicsLayer.removeAll();
+                updateResult("请选择测量工具开始测量");
+                updateInstruction("请选择测量类型");
+            }
+
+            // 初始化弹窗动作（用于景点直接测量）
+            attractionsLayer.popupTemplate.actions = [{
+                title: "从此点开始测量",
+                id: "measure-from-here",
+                className: "esri-icon-measure-line"
+            }];
+        });
+    </script>
+</body>
+
+</html>
