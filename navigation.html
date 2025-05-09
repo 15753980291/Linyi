@@ -6,62 +6,209 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>导航功能</title>
   <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Arial', sans-serif;
+      background: #f7f9fa;
+    }
+
     #mapView {
-      width: 250vh;
+      width: 100vw;
       height: 100vh;
-    }
-     /* 返回按钮样式 */
-        .back-btn {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 100;
-            background: rgb(75, 190, 222);
-            border: none;
-            padding: 20px 25px;
-            border-radius: 50px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            font-size: 1rem;
-            color: #2c3e50;
-            transition: all 0.3s;
-        }
-
-        .back-btn:hover {
-            background: #3498db;
-            color: white;
-        }
-
-        .back-btn i {
-            margin-right: 5px;
-        }
-    .info-panel {
       position: absolute;
-      top: 20px;
-      right: 20px;
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      left: 0;
+      top: 0;
+      z-index: 1;
+    }
+
+    .search-panel {
+      position: fixed;
+      top: 48px;
+      left: 40px;
       z-index: 100;
-      width: 300px;
+      background: rgba(255, 255, 255, 0.97);
+      border-radius: 18px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
+      padding: 28px 28px 20px 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      min-width: 300px;
+      gap: 16px;
+    }
+
+    .search-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 12px 18px;
+      border: none;
+      border-radius: 12px;
+      background: #f2f4f7;
+      font-size: 15px;
+      outline: none;
+      transition: box-shadow 0.2s;
+    }
+
+    .search-input:focus {
+      box-shadow: 0 0 0 2px #4bc0de33;
+    }
+
+    .search-btn {
+      background: #4bc0de;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .search-btn:hover {
+      background: #3498db;
+    }
+
+    .route-type-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 2px;
+    }
+
+    .route-type-label {
+      color: #888;
+      font-size: 14px;
+    }
+
+    .route-type-select {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      background: #f2f4f7;
+      font-size: 15px;
+      color: #333;
+      outline: none;
+    }
+
+    .locate-btn {
+      margin-top: 18px;
+      background: #fff;
+      color: #4bc0de;
+      border: none;
+      border-radius: 50px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+      padding: 12px 32px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s, color 0.2s;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .locate-btn:hover {
+      background: #4bc0de;
+      color: #fff;
+    }
+
+    .back-btn {
+      position: fixed;
+      top: 32px;
+      left: 32px;
+      z-index: 120;
+      background: #fff;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 50px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      font-size: 1rem;
+      color: #4bc0de;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .back-btn:hover {
+      background: #4bc0de;
+      color: #fff;
+    }
+
+    .info-panel {
+      position: fixed;
+      left: 40px;
+      bottom: 36px;
+      background: rgba(255, 255, 255, 0.97);
+      border-radius: 16px;
+      box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+      z-index: 120;
+      width: 320px;
+      padding: 24px 24px 18px 24px;
+      font-size: 15px;
+      color: #333;
+      line-height: 1.7;
+    }
+
+    .info-panel h3 {
+      margin-top: 0;
+      font-size: 18px;
+      color: #4bc0de;
+      font-weight: 600;
+    }
+
+    .info-panel button {
+      margin-top: 10px;
+      background: #f2f4f7;
+      color: #4bc0de;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 18px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .info-panel button:hover {
+      background: #4bc0de;
+      color: #fff;
+    }
+
+    .steps-panel {
+      position: fixed;
+      right: 40px;
+      top: 60px;
+      background: rgba(255, 255, 255, 0.97);
+      border-radius: 16px;
+      box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+      z-index: 120;
+      width: 360px;
       max-height: 80vh;
+      padding: 24px 24px 18px 24px;
+      font-size: 15px;
+      color: #333;
       overflow-y: auto;
     }
 
-    .step-list {
-      max-height: 300px;
-      overflow-y: auto;
-      border: 1px solid #eee;
-      padding: 10px;
-      border-radius: 5px;
-      margin-top: 10px;
+    .steps-panel h4 {
+      margin: 0 0 10px 0;
+      font-size: 17px;
+      color: #4bc0de;
+      font-weight: 600;
     }
 
     .step-list div {
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       padding-bottom: 8px;
       border-bottom: 1px solid #f0f0f0;
     }
@@ -70,55 +217,10 @@
       border-bottom: none;
       margin-bottom: 0;
     }
-    
-    /* 定位按钮样式 */
-    .locate-btn {
-      position: fixed;
-      top: 80px;
-      left: 20px;
-      z-index: 100;
-      background: rgb(75, 190, 222);
-      border: none;
-      padding: 20px 25px;
-      border-radius: 50px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      font-size: 1rem;
-      color: #2c3e50;
-      transition: all 0.3s;
-    }
-    
-    .locate-btn:hover {
-      background: #3498db;
-      color: white;
-    }
-    
-    /* 定位标记样式 */
-    .location-marker {
-      background-image: url('https://static.arcgis.com/images/Symbols/Shapes/GreenPin1LargeB.png');
-      background-size: cover;
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      cursor: pointer;
-    }
-    
-    .location-marker::after {
-      position: absolute;
-      content: '';
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #00FF00;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-    }
   </style>
   <!-- Update the ArcGIS CSS and JS references -->
   <link rel="stylesheet" href="https://js.arcgis.com/4.28/esri/themes/light/main.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <script src="https://js.arcgis.com/4.28/"></script>
   <script>
     require([
@@ -173,7 +275,7 @@
             "<li>景点门票：{rate}</li>" +
             "</li><ul>",
         },
-         renderer: {
+        renderer: {
           type: "simple",
           symbol: {
             type: "picture-marker",
@@ -188,7 +290,7 @@
         url: 'https://services.arcgis.com/QlEFgAATniYi0x0h/arcgis/rest/services/临沂酒店/FeatureServer/0',
         outFields: ['*'],
         popupTemplate: {
-         title: '临沂酒店：{name}',
+          title: '临沂酒店：{name}',
           content:
             "<ul><li>酒店名称：{name}</li>" +
             "<li>酒店地址：{address}</li>" +
@@ -197,7 +299,7 @@
             "<li>酒店电话：{tel}</li>" +
             "</li><ul>",
         },
-         renderer: {
+        renderer: {
           type: "simple",
           symbol: {
             type: "picture-marker",
@@ -224,11 +326,11 @@
         center: [118.35646, 35.10333], // 临沂坐标
         zoom: 13,
       })
-      
+
       // 添加定位跟踪功能
       let trackWidget = null;
       let currentLocationGraphic = null;
-      
+
       function initTracking() {
         trackWidget = new Track({
           view: view,
@@ -241,32 +343,32 @@
             })
           })
         });
-        
+
         // 将定位按钮添加到UI
         view.ui.add(trackWidget, "top-left");
-        
+
         // 监听位置变化
-        trackWidget.watch("tracking", function(newValue) {
-          if(newValue) {
+        trackWidget.watch("tracking", function (newValue) {
+          if (newValue) {
             console.log("开始跟踪位置");
           } else {
             console.log("停止跟踪位置");
           }
         });
-        
+
         // 监听位置更新
-        trackWidget.on("track", function(event) {
+        trackWidget.on("track", function (event) {
           updateCurrentLocation(event.position);
         });
       }
-      
+
       // 更新当前位置显示
       function updateCurrentLocation(position) {
         // 移除旧的当前位置标记
-        if(currentLocationGraphic) {
+        if (currentLocationGraphic) {
           view.graphics.remove(currentLocationGraphic);
         }
-        
+
         // 创建新的位置标记
         currentLocationGraphic = new Graphic({
           geometry: new Point({
@@ -282,29 +384,29 @@
             }
           })
         });
-        
+
         view.graphics.add(currentLocationGraphic);
-        
+
         // 将当前位置设置为起点
-        if(position.longitude && position.latitude) {
+        if (position.longitude && position.latitude) {
           startPoint = new Point({
             longitude: position.longitude,
             latitude: position.latitude
           });
-          
+
           highlightFeature(startPoint, '#FF0000', '当前位置');
           document.getElementById('startPointInfo').textContent = '当前位置';
-          
+
           // 如果已经有终点，重新计算路线
-          if(endPoint) {
+          if (endPoint) {
             calculateRoute();
           }
         }
       }
-      
+
       // 手动定位按钮点击事件
-      document.getElementById('locateBtn').addEventListener('click', function() {
-        if(trackWidget) {
+      document.getElementById('locateBtn').addEventListener('click', function () {
+        if (trackWidget) {
           trackWidget.start();
         } else {
           initTracking();
@@ -336,14 +438,14 @@
               // 选择起点
               startFeature = feature
               startPoint = feature.geometry
-              highlightFeature(startPoint, '#FF0000', '起点: ' + (feature.attributes.name || '未命名点位'))
-              document.getElementById('startPointInfo').textContent = feature.attributes.name || '未命名点位'
+              highlightFeature(startPoint, '#FF0000', '起点: ' + (feature.attributes.name || '当前位置'))
+              document.getElementById('startPointInfo').textContent = feature.attributes.name || '当前位置'
             } else if (!endPoint) {
               // 选择终点
               endFeature = feature
               endPoint = feature.geometry
-              highlightFeature(endPoint, '#00FF00', '终点: ' + (feature.attributes.name || '未命名点位'))
-              document.getElementById('endPointInfo').textContent = feature.attributes.name || '未命名点位'
+              highlightFeature(endPoint, '#00FF00', '终点: ' + (feature.attributes.name || '当前位置'))
+              document.getElementById('endPointInfo').textContent = feature.attributes.name || '当前位置'
               calculateRoute()
             }
           }
@@ -373,9 +475,9 @@
         document.getElementById('distance').textContent = '0'
         document.getElementById('duration').textContent = '0'
         document.getElementById('steps').innerHTML = ''
-        
+
         // 保留当前位置标记
-        if(currentLocationGraphic) {
+        if (currentLocationGraphic) {
           view.graphics.add(currentLocationGraphic);
         }
       }
@@ -406,108 +508,209 @@
         routeGraphics.push(graphic)
       }
 
-      // 路径规划
+      // 路径规划，支持三种方式
       async function calculateRoute() {
+        if (!startPoint || !endPoint) return;
+        const routeType = document.getElementById('routeType').value;
+        let url = '';
+        if (routeType === 'driving') {
+          url = `https://restapi.amap.com/v3/direction/driving?origin=${startPoint.longitude},${startPoint.latitude}&destination=${endPoint.longitude},${endPoint.latitude}&extensions=all&output=json&key=66aa42792dcab5d7a334f13c80dcfdf4`;
+        } else if (routeType === 'walking') {
+          url = `https://restapi.amap.com/v3/direction/walking?origin=${startPoint.longitude},${startPoint.latitude}&destination=${endPoint.longitude},${endPoint.latitude}&output=json&key=66aa42792dcab5d7a334f13c80dcfdf4`;
+        } else if (routeType === 'bicycling') {
+          url = `https://restapi.amap.com/v4/direction/bicycling?origin=${startPoint.longitude},${startPoint.latitude}&destination=${endPoint.longitude},${endPoint.latitude}&output=json&key=66aa42792dcab5d7a334f13c80dcfdf4`;
+        }
         try {
-          // 使用fetch替代axios
-          const url = `https://restapi.amap.com/v3/direction/driving?origin=${startPoint.longitude},${startPoint.latitude}&destination=${endPoint.longitude},${endPoint.latitude}&extensions=all&output=json&key=66aa42792dcab5d7a334f13c80dcfdf4`
-
-          const response = await fetch(url)
-          const data = await response.json()
-
-          if (data.status === '1' && data.route && data.route.paths && data.route.paths.length > 0) {
-            const route = data.route.paths[0]
-            drawRoute(route)
-            showRouteInfo(route)
+          const response = await fetch(url);
+          const data = await response.json();
+          if (routeType === 'bicycling') {
+            if (data.data && data.data.paths && data.data.paths.length > 0) {
+              const route = data.data.paths[0];
+              drawRoute(route, 'bicycling');
+              showRouteInfo(route, 'bicycling');
+            } else {
+              alert('骑行路径规划失败，请检查坐标输入或选择其他点位');
+            }
           } else {
-            console.error('路径规划失败:', data)
-            alert('路径规划失败，请检查坐标输入或选择其他点位')
+            if (data.status === '1' && data.route && data.route.paths && data.route.paths.length > 0) {
+              const route = data.route.paths[0];
+              drawRoute(route);
+              showRouteInfo(route);
+            } else {
+              alert('路径规划失败，请检查坐标输入或选择其他点位');
+            }
           }
         } catch (error) {
-          console.error('路径规划失败:', error)
-          alert('路径规划失败，请检查网络连接')
+          alert('路径规划失败，请检查网络连接');
+        }
+      }
+      // 绘制路线，支持骑行
+      function drawRoute(route, type) {
+        routeGraphics.forEach((g) => {
+          if (g.symbol.type === 'simple-line') view.graphics.remove(g)
+        });
+        let pathPoints = [];
+        if (type === 'bicycling') {
+          if (route.steps) {
+            route.steps.forEach(step => {
+              if (step.polyline) {
+                pathPoints = pathPoints.concat(step.polyline.split(';').map(p => p.split(',').map(Number)));
+              }
+            });
+          }
+        } else {
+          pathPoints = route.steps.flatMap((step) =>
+            step.polyline.split(';').map((p) => {
+              const [lng, lat] = p.split(',').map(Number)
+              return [lng, lat]
+            })
+          );
+        }
+        if (pathPoints.length > 1) {
+          const lineSymbol = new SimpleLineSymbol({ color: [0, 122, 194, 0.8], width: 4 });
+          const routeGraphic = new Graphic({
+            geometry: new Polyline({ paths: [pathPoints] }),
+            symbol: lineSymbol,
+          });
+          view.graphics.add(routeGraphic);
+          routeGraphics.push(routeGraphic);
+        }
+      }
+      // 显示路线信息，支持骑行
+      function showRouteInfo(route, type) {
+        if (type === 'bicycling') {
+          document.getElementById('distance').textContent = (parseInt(route.distance) / 1000).toFixed(2);
+          document.getElementById('duration').textContent = Math.ceil(parseInt(route.duration) / 60);
+          let stepsHTML = '';
+          if (route.steps) {
+            route.steps.forEach((step, idx) => {
+              stepsHTML += `<div><strong>步骤${idx + 1}:</strong> ${step.instruction || ''}</div>`;
+            });
+          }
+          document.getElementById('steps').innerHTML = stepsHTML;
+        } else {
+          document.getElementById('distance').textContent = (route.distance / 1000).toFixed(2)
+          document.getElementById('duration').textContent = Math.ceil(route.duration / 60)
+          const stepsHTML = route.steps
+            .map(
+              (step, index) => `
+
+                  <div>
+                    <strong>步骤 ${index + 1}:</strong>
+                    ${step.instruction}
+                  </div>
+                `
+            )
+            .join('')
+          document.getElementById('steps').innerHTML = stepsHTML
         }
       }
 
-      // 绘制路线
-      function drawRoute(route) {
-        // 清除旧路线
-        routeGraphics.forEach((g) => {
-          if (g.symbol.type === 'simple-line') view.graphics.remove(g)
-        })
+      // 初始化搜索功能
+      // 搜索起点
+      document.getElementById("startSearchBtn").addEventListener("click", function () {
+        performSearchPoint("start");
+      });
+      document.getElementById("startInput").addEventListener("keypress", function (e) {
+        if (e.key === "Enter") performSearchPoint("start");
+      });
+      // 搜索终点
+      document.getElementById("endSearchBtn").addEventListener("click", function () {
+        performSearchPoint("end");
+      });
+      document.getElementById("endInput").addEventListener("keypress", function (e) {
+        if (e.key === "Enter") performSearchPoint("end");
+      });
 
-        // 解析路径点
-        const pathPoints = route.steps.flatMap((step) =>
-          step.polyline.split(';').map((p) => {
-            const [lng, lat] = p.split(',').map(Number)
-            return [lng, lat]
-          })
-        )
-
-        // 创建路线图形
-        const lineSymbol = new SimpleLineSymbol({
-          color: [0, 122, 194, 0.8],
-          width: 4,
-        })
-
-        const routeGraphic = new Graphic({
-          geometry: new Polyline({
-            paths: [pathPoints],
-          }),
-          symbol: lineSymbol,
-        })
-
-        view.graphics.add(routeGraphic)
-        routeGraphics.push(routeGraphic)
+      // 搜索并设置起点或终点
+      function performSearchPoint(type) {
+        const value = document.getElementById(type === 'start' ? "startInput" : "endInput").value.trim();
+        if (!value) return;
+        const attractionsQuery = pointLayer.createQuery();
+        attractionsQuery.where = `name LIKE '%${value}%'`;
+        attractionsQuery.outFields = ["*"];
+        attractionsQuery.returnGeometry = true;
+        const hotelsQuery = pointLayer1.createQuery();
+        hotelsQuery.where = `name LIKE '%${value}%'`;
+        hotelsQuery.outFields = ["*"];
+        hotelsQuery.returnGeometry = true;
+        Promise.all([
+          pointLayer.queryFeatures(attractionsQuery),
+          pointLayer1.queryFeatures(hotelsQuery)
+        ]).then(function ([attractionsResults, hotelsResults]) {
+          const allFeatures = [...attractionsResults.features, ...hotelsResults.features];
+          if (allFeatures.length > 0) {
+            view.goTo(allFeatures);
+            const feature = allFeatures[0];
+            if (type === 'start') {
+              startFeature = feature;
+              startPoint = feature.geometry;
+              highlightFeature(startPoint, '#FF0000', '起点: ' + (feature.attributes.name || '当前位置'));
+              document.getElementById('startPointInfo').textContent = feature.attributes.name || '当前位置';
+            } else {
+              endFeature = feature;
+              endPoint = feature.geometry;
+              highlightFeature(endPoint, '#00FF00', '终点: ' + (feature.attributes.name || '当前位置'));
+              document.getElementById('endPointInfo').textContent = feature.attributes.name || '当前位置';
+            }
+            if (startPoint && endPoint) calculateRoute();
+          } else {
+            alert('未找到匹配的景点或酒店');
+          }
+        }).catch(function (error) {
+          alert('搜索出错，请重试');
+        });
       }
 
-      // 显示路线信息
-      function showRouteInfo(route) {
-        document.getElementById('distance').textContent = (route.distance / 1000).toFixed(2)
-        document.getElementById('duration').textContent = Math.ceil(route.duration / 60)
-
-        const stepsHTML = route.steps
-          .map(
-            (step, index) => `
-                <div>
-                  <strong>步骤 ${index + 1}:</strong>
-                  ${step.instruction}
-                </div>
-              `
-          )
-          .join('')
-
-        document.getElementById('steps').innerHTML = stepsHTML
-      }
-      
       // 初始化地图后启动定位功能
-      view.when(function() {
+      view.when(function () {
         initTracking();
       });
     })
   </script>
+
 </head>
 
 <body>
   <div id="mapView"></div>
   <button class="back-btn" onclick="history.back()"><i class="fas fa-arrow-left"></i> 返回</button>
-  <button class="locate-btn" id="locateBtn"><i class="fas fa-location-arrow"></i> 定位</button>
-  
+  <div class="search-panel">
+    <div class="search-row">
+      <input type="text" id="startInput" class="search-input" placeholder="输入起点名称或关键字">
+      <button id="startSearchBtn" class="search-btn"><i class="fas fa-search"></i></button>
+    </div>
+    <div class="search-row">
+      <input type="text" id="endInput" class="search-input" placeholder="输入终点名称或关键字">
+      <button id="endSearchBtn" class="search-btn"><i class="fas fa-search"></i></button>
+    </div>
+    <div class="route-type-row">
+      <span class="route-type-label">路线方式</span>
+      <select id="routeType" class="route-type-select">
+        <option value="driving">驾车</option>
+        <option value="walking">步行</option>
+        <option value="bicycling">骑行</option>
+      </select>
+      <button id="resetBtn">重置导航</button>
+    </div>
+    <button class="locate-btn" id="locateBtn"><i class="fas fa-location-arrow"></i> 获取当前位置</button>
+  </div>
   <div class="info-panel">
     <h3>导航操作说明</h3>
-    <p>1. 点击地图上的点位选择起点</p>
-    <p>2. 点击另一个点位选择终点</p>
-    <p>3. 自动显示规划路线</p>
-    <p>4. 点击"定位"按钮获取当前位置</p>
+    <ol style="padding-left: 18px;">
+      <li>可在左侧输入框分别搜索起点和终点</li>
+      <li>或直接点击地图上的景点/酒店点位设为起点/终点</li>
+      <li>点击“获取当前位置”可将当前位置设为起点</li>
+      <li>选择路线方式后自动规划路线</li>
+    </ol>
     <button id="resetBtn">重置导航</button>
-    <div id="routeInfo">
-      <p>起点：<span id="startPointInfo">未选择</span></p>
-      <p>终点：<span id="endPointInfo">未选择</span></p>
-      <p>距离：<span id="distance">0</span> 公里</p>
-      <p>时间：<span id="duration">0</span> 分钟</p>
-      <h4>导航步骤：</h4>
-      <div class="step-list" id="steps"></div>
-    </div>
+  </div>
+  <div class="steps-panel">
+    <h4>导航信息</h4>
+    <p>起点：<span id="startPointInfo">未选择</span></p>
+    <p>终点：<span id="endPointInfo">未选择</span></p>
+    <p>距离：<span id="distance">0</span> 公里</p>
+    <p>时间：<span id="duration">0</span> 分钟</p>
+    <div class="step-list" id="steps"></div>
   </div>
 </body>
 

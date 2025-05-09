@@ -5,6 +5,7 @@
     <title>景点推荐</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         .header {
             background-color: #2c4450;
@@ -14,7 +15,7 @@
             justify-content: space-between;
             align-items: center;
         }
-    
+
         .back-btn {
             background-color: #f5f5f5;
             color: rgb(10, 0, 0);
@@ -25,9 +26,368 @@
             font-size: 14px;
             transition: background-color 0.3s;
         }
-    
+
         .back-btn:hover {
             background-color: #7b878ae4;
+        }
+
+        /* 搜索框样式 */
+        .search-container {
+            display: flex;
+            align-items: center;
+            margin: 0 20px;
+            flex-grow: 1;
+            max-width: 500px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px 0 0 4px;
+            font-size: 14px;
+        }
+
+        .search-btn {
+            background-color: #f5f5f5;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .search-btn:hover {
+            background-color: #e0e0e0;
+        }
+
+        /* 筛选侧边栏样式 */
+        .filter-sidebar {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            width: 250px;
+            z-index: 100;
+        }
+
+        .filter-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2c4450;
+        }
+
+        .filter-option {
+            /* margin-bottom: 10px; */
+            /* Removed for inline display */
+            display: inline-flex;
+            /* Use inline-flex for label alignment */
+            align-items: center;
+            margin-right: 15px;
+            /* Space between options */
+        }
+
+        .filter-option label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .filter-option input[type="checkbox"] {
+            margin-right: 5px;
+        }
+
+        .filter-option label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .filter-option input {
+            margin-right: 10px;
+        }
+
+        .layer-controls {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            padding: 0 10px;
+        }
+
+        .layer-button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #2c4450;
+            color: white;
+        }
+
+        .layer-button:hover {
+            background-color: #3a5a69;
+        }
+
+        .layer-button.active {
+            background-color: #3a5a69;
+        }
+
+        .layer-button i {
+            margin-right: 6px;
+        }
+
+        /* 景点信息卡片样式 */
+        .attraction-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .attraction-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .attraction-info {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .attraction-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        /* 响应式布局 */
+        @media (max-width: 768px) {
+            .search-container {
+                max-width: 300px;
+            }
+
+            .filter-sidebar {
+                width: 200px;
+            }
+        }
+
+        /* 弹出框照片样式 */
+        .popup-content {
+            display: flex;
+            flex-direction: column;
+            max-width: 100%;
+            min-width: 250px;
+        }
+
+        .popup-photo {
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .popup-photo img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .popup-photo img:hover {
+            transform: scale(1.05);
+        }
+
+        .popup-info {
+            font-size: 14px;
+        }
+
+        .popup-info p {
+            margin: 5px 0;
+        }
+
+        .loading-indicator {
+            padding: 20px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .no-photo {
+            padding: 20px;
+            color: #999;
+            font-style: italic;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+        }
+
+        .error-message {
+            padding: 10px;
+            color: #d9534f;
+            background-color: #f9f2f2;
+            border-radius: 5px;
+        }
+
+        .photo-gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .attachment-photo {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            margin: 2px;
+        }
+
+        /* 照片模态框样式 */
+        .photo-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            padding-top: 50px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+
+        .modal-content {
+            margin: auto;
+            display: block;
+            max-width: 90%;
+            max-height: 80%;
+        }
+
+        #modalCaption {
+            margin: auto;
+            display: block;
+            width: 80%;
+            max-width: 700px;
+            text-align: center;
+            color: white;
+            padding: 10px 0;
+            height: 150px;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .close-modal:hover,
+        .close-modal:focus {
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* 添加收放按钮样式 */
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 10px;
+        }
+
+        .filter-header h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .filter-toggle {
+            font-size: 18px;
+            transition: transform 0.3s;
+        }
+
+        .filter-toggle.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .filter-content {
+            max-height: 1000px;
+            /* 恢复最大高度设置，确保内容可见 */
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+            display: flex;
+            /* Use flexbox for inline layout */
+            flex-wrap: wrap;
+            /* Allow wrapping if needed */
+            gap: 10px;
+            /* Space between items */
+            align-items: center;
+            /* Align items vertically */
+            padding-bottom: 10px;
+            /* Add some padding below */
+        }
+
+        .filter-content.collapsed {
+            max-height: 0;
+            padding: 0;
+            /* 折叠时移除内边距 */
+            overflow: hidden;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            padding: 0 10px;
+        }
+
+        .action-button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nearby-button {
+            background-color: #2c4450;
+            color: white;
+        }
+
+        .nearby-button:hover {
+            background-color: #3a5a69;
+        }
+
+        .clear-button {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .clear-button:hover {
+            background-color: #c82333;
+        }
+
+        .action-button i {
+            margin-right: 6px;
         }
     </style>
 </head>
@@ -35,21 +395,108 @@
 <body>
     <header class="header">
         <h1>临沂市景点推荐</h1>
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="搜索景点名称...">
+            <button id="searchBtn" class="search-btn"><i class="fas fa-search"></i></button>
+        </div>
         <button class="back-btn" onclick="window.history.back()">返回</button>
     </header>
 
+    <!-- 筛选侧边栏 -->
+    <div class="filter-sidebar" id="filterSidebar">
+        <div class="filter-title">图层选择</div>
+        <div class="layer-controls">
+            <button class="layer-button" id="showAllBtn">
+                <i class="fas fa-layer-group"></i>
+                所有图层
+            </button>
+            <button class="layer-button" id="showAttractionsBtn">
+                <i class="fas fa-landmark"></i>
+                景点
+            </button>
+            <button class="layer-button" id="showHotelsBtn">
+                <i class="fas fa-hotel"></i>
+                酒店
+            </button>
+        </div>
+
+        <!-- 可收放的筛选区域 -->
+        <div class="filter-header" id="filterHeader">
+            <h3>景区筛选条件</h3>
+            <span class="filter-toggle" id="filterToggle">▼</span>
+        </div>
+        <div class="filter-content" id="filterContent">
+            <!-- 景区等级筛选 -->
+            <div class="filter-section">
+                <div class="filter-option">
+                    <label><input type="checkbox" id="filter5A">5A级景区</label>
+                </div>
+                <div class="filter-option">
+                    <label><input type="checkbox" id="filter4A">4A级景区</label>
+                </div>
+                <div class="filter-option">
+                    <label><input type="checkbox" id="filter3A">3A级景区</label>
+                </div>
+                <div class="filter-option">
+                    <label><input type="checkbox" id="filterOther">其他景区</label>
+                </div>
+            </div>
+            <!-- 县区筛选选项将动态生成 -->
+            <div id="adnameFilters"></div>
+            <button id="resetFilterBtn" class="filter-btn"
+                style="background-color: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;">重置筛选</button>
+        </div>
+
+        <div class="action-buttons">
+            <button class="action-button nearby-button" id="findNearbyBtn">
+                <i class="fas fa-search-location"></i>
+                附近酒店
+            </button>
+            <button class="action-button clear-button" id="clearResultsBtn">
+                <i class="fas fa-trash-alt"></i>
+                清除记录
+            </button>
+        </div>
+        <div id="attractionList" class="attraction-list"></div>
+    </div>
+
     <div class="map-container" id="mapView"></div>
+
+    <!-- 照片模态框 -->
+    <div id="photoModal" class="photo-modal">
+        <span class="close-modal">&times;</span>
+        <img id="modalImage" class="modal-content">
+        <div id="modalCaption"></div>
+    </div>
 
     <script src="https://js.arcgis.com/4.24/"></script>
     <script>
         require([
             "esri/Map",
             "esri/views/MapView",
-            "esri/layers/FeatureLayer"
-        ], (Map, MapView, FeatureLayer) => {
+            "esri/layers/FeatureLayer",
+            "esri/widgets/Search",
+            "esri/rest/support/Query",
+            "esri/Basemap",
+            "esri/layers/WebTileLayer",
+            "esri/Graphic",
+            "esri/geometry/Point",
+            "esri/request"
+        ], (Map, MapView, FeatureLayer, Search, Query, Basemap, WebTileLayer, Graphic, Point, esriRequest) => {
+
+            // 创建高德地图瓦片图层
+            const gaodeLayer = new WebTileLayer({
+                urlTemplate: "https://webrd02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}",
+                copyright: "高德地图"
+            });
+
+            // 创建底图实例
+            const basemap = new Basemap({
+                baseLayers: [gaodeLayer]
+            });
 
             const map = new Map({
-                basemap: "streets"
+                basemap: basemap
             });
 
             const view = new MapView({
@@ -61,22 +508,582 @@
 
             // 加载景点要素服务
             const attractionsLayer = new FeatureLayer({
-                url: "https://www.geosceneonline.cn/server/rest/services/Hosted/临沂/FeatureServer/0",
+                url: "https://www.geosceneonline.cn/server/rest/services/Hosted/临沂景点/FeatureServer",
+                outFields: ["*"],
                 popupTemplate: {
                     title: "{name}",
-                    content: [{
-                        type: "fields",
-                        fieldInfos: [
-                            { fieldName: "addess", label: "地点" },
-                            { fieldName: "feature	", label: "特色" }, 
-                            { fieldName: "Grade", label: "景区级别" },
-                            { fieldName: "rate", label: "门票价格" }
-                        ]
-                    }]
+                    content: function (feature) {
+                        // 获取景点属性
+                        const attr = feature.graphic.attributes;
+                        const name = attr.name || "未命名景点";
+                        const objectId = attr.OBJECTID || attr.objectid;
+
+                        // 创建内容容器
+                        const contentDiv = document.createElement("div");
+                        contentDiv.className = "popup-content";
+
+                        // 创建照片容器
+                        const photoDiv = document.createElement("div");
+                        photoDiv.className = "popup-photo";
+                        photoDiv.innerHTML = `<div class="loading-indicator">正在加载照片...</div>`;
+                        contentDiv.appendChild(photoDiv);
+
+                        // 创建信息容器
+                        const infoDiv = document.createElement("div");
+                        infoDiv.className = "popup-info";
+                        infoDiv.innerHTML = `
+                            <p><strong>地点:</strong> ${attr.address || attr.address || "未知"}</p>
+                            <p><strong>特色:</strong> ${attr.feature || "未知"}</p>
+                            <p><strong>景区级别:</strong> ${attr.Grade || attr.grade || "未分级"}</p>
+                            <p><strong>门票价格:</strong> ${attr.rate || "免费"}</p>
+                        `;
+                        contentDiv.appendChild(infoDiv);
+
+                        // 查询附件
+                        if (objectId) {
+                            console.log("要素ID:", objectId);
+
+                            // 使用FeatureLayer的queryAttachments方法查询附件
+                            attractionsLayer.queryAttachments({
+                                objectIds: [objectId],
+                                attachmentTypes: ["image/jpeg", "image/png", "image/gif"]
+                            }).then(function (attachmentsByFeatureId) {
+                                console.log("附件响应:", attachmentsByFeatureId);
+
+                                // 检查是否有附件
+                                if (attachmentsByFeatureId && Object.keys(attachmentsByFeatureId).length > 0) {
+                                    const attachments = attachmentsByFeatureId[objectId];
+
+                                    if (attachments && attachments.length > 0) {
+                                        const photoHtml = [];
+
+                                        // 创建照片幻灯片容器
+                                        photoHtml.push(`<div class="photo-gallery">`);
+
+                                        // 遍历所有附件
+                                        attachments.forEach(function (attachment) {
+                                            photoHtml.push(`<img src="${attachment.url}" alt="${name}" class="attachment-photo" onclick="showModal('${attachment.url}', '${name}')">`);
+                                        });
+
+                                        photoHtml.push(`</div>`);
+                                        photoDiv.innerHTML = photoHtml.join("");
+                                        return;
+                                    }
+                                }
+
+                                // 如果没有附件，显示没有照片的提示
+                                photoDiv.innerHTML = `<div class="no-photo">暂无照片</div>`;
+                            }).catch(function (error) {
+                                console.error("获取附件失败:", error);
+                                photoDiv.innerHTML = `<div class="error-message">照片加载失败</div>`;
+                            });
+                        } else {
+                            photoDiv.innerHTML = `<div class="no-photo">暂无照片</div>`;
+                        }
+
+                        return contentDiv;
+                    }
+                }
+            });
+
+            // 加载酒店要素服务（用于查找附近酒店）
+            const hotelsLayer = new FeatureLayer({
+                url: "https://www.geosceneonline.cn/server/rest/services/Hosted/临沂酒店1/FeatureServer",
+                outFields: ["*"],
+                visible: false, // 默认不显示
+                popupTemplate: {
+                    title: "{name}",
+                    content: function (feature) {
+                        // 获取酒店属性
+                        const attr = feature.graphic.attributes;
+                        const name = attr.name || "未命名酒店";
+                        const objectId = attr.OBJECTID || attr.objectid;
+
+                        // 创建内容容器
+                        const contentDiv = document.createElement("div");
+                        contentDiv.className = "popup-content";
+
+                        // 创建照片容器
+                        const photoDiv = document.createElement("div");
+                        photoDiv.className = "popup-photo";
+                        photoDiv.innerHTML = `<div class="loading-indicator">正在加载照片...</div>`;
+                        contentDiv.appendChild(photoDiv);
+
+                        // 创建信息容器
+                        const infoDiv = document.createElement("div");
+                        infoDiv.className = "popup-info";
+                        infoDiv.innerHTML = `
+                            <p><strong>地区:</strong> ${attr.adname || "未知"}</p>
+                            <p><strong>地址:</strong> ${attr.address || "未知"}</p>
+                            <p><strong>电话:</strong> ${attr.tel || "未提供"}</p>
+                        `;
+                        contentDiv.appendChild(infoDiv);
+
+                        // 查询附件
+                        if (objectId) {
+                            console.log("酒店要素ID:", objectId);
+
+                            // 使用FeatureLayer的queryAttachments方法查询附件
+                            hotelsLayer.queryAttachments({
+                                objectIds: [objectId],
+                                attachmentTypes: ["image/jpeg", "image/png", "image/gif"]
+                            }).then(function (attachmentsByFeatureId) {
+                                console.log("酒店附件响应:", attachmentsByFeatureId);
+
+                                // 检查是否有附件
+                                if (attachmentsByFeatureId && Object.keys(attachmentsByFeatureId).length > 0) {
+                                    const attachments = attachmentsByFeatureId[objectId];
+
+                                    if (attachments && attachments.length > 0) {
+                                        const photoHtml = [];
+
+                                        // 创建照片幻灯片容器
+                                        photoHtml.push(`<div class="photo-gallery">`);
+
+                                        // 遍历所有附件
+                                        attachments.forEach(function (attachment) {
+                                            photoHtml.push(`<img src="${attachment.url}" alt="${name}" class="attachment-photo" onclick="showModal('${attachment.url}', '${name}')">`);
+                                        });
+
+                                        photoHtml.push(`</div>`);
+                                        photoDiv.innerHTML = photoHtml.join("");
+                                        return;
+                                    }
+                                }
+
+                                // 如果没有附件，显示没有照片的提示
+                                photoDiv.innerHTML = `<div class="no-photo">暂无照片</div>`;
+                            }).catch(function (error) {
+                                console.error("获取酒店附件失败:", error);
+                                photoDiv.innerHTML = `<div class="error-message">照片加载失败</div>`;
+                            });
+                        } else {
+                            photoDiv.innerHTML = `<div class="no-photo">暂无照片</div>`;
+                        }
+
+                        return contentDiv;
+                    }
                 }
             });
 
             map.add(attractionsLayer);
+            map.add(hotelsLayer);
+
+            // 图层切换功能
+            document.getElementById("showAllBtn").addEventListener("click", function () {
+                attractionsLayer.visible = true;
+                hotelsLayer.visible = true;
+            });
+
+            document.getElementById("showAttractionsBtn").addEventListener("click", function () {
+                attractionsLayer.visible = true;
+                hotelsLayer.visible = false;
+            });
+
+            document.getElementById("showHotelsBtn").addEventListener("click", function () {
+                attractionsLayer.visible = false;
+                hotelsLayer.visible = true;
+            });
+
+            // 初始化搜索组件
+            const searchWidget = new Search({
+                view: view,
+                sources: [
+                    {
+                        layer: attractionsLayer,
+                        searchFields: ["name"],
+                        displayField: "name",
+                        exactMatch: false,
+                        outFields: ["*"],
+                        name: "景点",
+                        placeholder: "搜索景点名称"
+                    }
+                ],
+                includeDefaultSources: false
+            });
+
+            // 手动搜索功能
+            document.getElementById("searchBtn").addEventListener("click", function () {
+                performSearch();
+            });
+
+            document.getElementById("searchInput").addEventListener("keypress", function (e) {
+                if (e.key === "Enter") {
+                    performSearch();
+                }
+            });
+
+            function performSearch() {
+                const searchValue = document.getElementById("searchInput").value.trim();
+                if (searchValue === "") return;
+
+                const query = attractionsLayer.createQuery();
+                query.where = `name LIKE '%${searchValue}%'`;
+                query.outFields = ["*"];
+                query.returnGeometry = true;
+
+                attractionsLayer.queryFeatures(query).then(function (results) {
+                    // 清空筛选结果列表
+                    const attractionList = document.getElementById("attractionList");
+                    attractionList.innerHTML = "";
+
+                    if (results.features.length > 0) {
+                        // 显示搜索结果
+                        results.features.forEach(function (feature) {
+                            const attr = feature.attributes;
+                            const objectId = attr.OBJECTID || attr.objectid;
+                            const card = document.createElement("div");
+                            card.className = "attraction-card";
+                            // 先插入图片容器
+                            card.innerHTML = `
+                                <div style=\"display:flex;align-items:center;gap:10px;\">
+                                    <img src=\"../img/loading.gif\" alt=\"图片\" class=\"attachment-photo\" style=\"width:48px;height:48px;object-fit:cover;border-radius:6px;\" id=\"img-search-${objectId}\">
+                                    <div>
+                                        <div class=\"attraction-name\">${attr.name || "未命名景点"}</div>
+                                        <div class=\"attraction-info\">级别: ${attr.grade || attr.Grade || "未分级"}</div>
+                                        <div class=\"attraction-info\">门票: ${attr.rate || "免费"}</div>
+                                    </div>
+                                </div>
+                            `;
+                            card.addEventListener("click", function () {
+                                // 点击卡片时定位到该景点
+                                view.goTo({
+                                    target: feature.geometry,
+                                    zoom: 15
+                                });
+                            });
+                            attractionList.appendChild(card);
+                            // 查询附件图片
+                            if (objectId) {
+                                attractionsLayer.queryAttachments({
+                                    objectIds: [objectId],
+                                    attachmentTypes: ["image/jpeg", "image/png", "image/gif"]
+                                }).then(function (attachmentsByFeatureId) {
+                                    const attachments = attachmentsByFeatureId[objectId];
+                                    const img = document.getElementById(`img-search-${objectId}`);
+                                    if (attachments && attachments.length > 0) {
+                                        img.src = attachments[0].url;
+                                    } else {
+                                        img.src = "../img/no-photo.png";
+                                    }
+                                }).catch(function () {
+                                    const img = document.getElementById(`img-search-${objectId}`);
+                                    if (img) img.src = "../img/no-photo.png";
+                                });
+                            }
+                        });
+
+                        // 缩放到结果范围
+                        view.goTo(results.features);
+                    } else {
+                        // 无搜索结果
+                        const noResults = document.createElement("div");
+                        noResults.className = "attraction-card";
+                        noResults.innerHTML = "<div class='attraction-name'>未找到匹配的景点</div>";
+                        attractionList.appendChild(noResults);
+                    }
+                }).catch(function (error) {
+                    console.error("搜索出错:", error);
+                });
+            }
+
+            // 筛选功能
+            const filterCheckboxes = [
+                document.getElementById("filter5A"),
+                document.getElementById("filter4A"),
+                document.getElementById("filter3A"),
+                document.getElementById("filterOther")
+            ];
+
+            // 为每个复选框添加事件监听器（如果元素存在）
+            filterCheckboxes.forEach(function (checkbox) {
+                if (checkbox) { // 检查元素是否存在
+                    checkbox.addEventListener("change", applyFilters);
+                }
+            });
+
+            // 重置筛选按钮
+            const resetFilterBtn = document.getElementById("resetFilterBtn");
+            if (resetFilterBtn) {
+                resetFilterBtn.addEventListener("click", function () {
+                    filterCheckboxes.forEach(function (checkbox) {
+                        if (checkbox) {
+                            checkbox.checked = false;
+                        }
+                    });
+                    applyFilters();
+                });
+            }
+
+            // 应用筛选条件
+            function applyFilters() {
+                // 获取选中的筛选条件
+                const selectedGrades = [];
+                const filter5A = document.getElementById("filter5A");
+                const filter4A = document.getElementById("filter4A");
+                const filter3A = document.getElementById("filter3A");
+
+                if (filter5A && filter5A.checked) selectedGrades.push("5A");
+                if (filter4A && filter4A.checked) selectedGrades.push("4A");
+                if (filter3A && filter3A.checked) selectedGrades.push("3A");
+
+                const filterOther = document.getElementById("filterOther");
+                const includeOthers = filterOther ? filterOther.checked : false;
+
+                // 构建筛选条件
+                let whereClause = "";
+                if (selectedGrades.length > 0) {
+                    // 使用LIKE操作符来匹配各种可能的格式，如"4A"、"4A级"等
+                    whereClause = selectedGrades.map(grade => `Grade LIKE '%${grade}%'`).join(" OR ");
+                    if (includeOthers) {
+                        whereClause = `(${whereClause}) OR (Grade IS NULL OR (Grade NOT LIKE '%5A%' AND Grade NOT LIKE '%4A%' AND Grade NOT LIKE '%3A%'))`;
+                    }
+                } else if (includeOthers) {
+                    whereClause = "Grade IS NULL OR (Grade NOT LIKE '%5A%' AND Grade NOT LIKE '%4A%' AND Grade NOT LIKE '%3A%')";
+                } else {
+                    // 如果没有选择任何筛选条件，显示所有景点
+                    whereClause = "1=1";
+                }
+
+                // 打印筛选条件以便调试
+                console.log("Filter condition:", whereClause);
+
+                // 应用筛选条件
+                const query = new Query({
+                    where: whereClause,
+                    outFields: ["*"],
+                    returnGeometry: true
+                });
+
+                attractionsLayer.queryFeatures(query).then(function (results) {
+                    // 清空筛选结果列表
+                    const attractionList = document.getElementById("attractionList");
+                    attractionList.innerHTML = "";
+                    console.log("Results:", results.features);
+
+                    if (results.features.length > 0) {
+                        // 显示筛选结果
+                        results.features.forEach(function (feature) {
+                            const attr = feature.attributes;
+                            const objectId = attr.OBJECTID || attr.objectid;
+                            const card = document.createElement("div");
+                            card.className = "attraction-card";
+                            // 先插入图片容器
+                            card.innerHTML = `
+                                <div style="display:flex;align-items:center;gap:10px;">
+                                    <img src="../img/loading.gif" alt="图片" class="attachment-photo" style="width:48px;height:48px;object-fit:cover;border-radius:6px;" id="img-${objectId}">
+                                    <div>
+                                        <div class="attraction-name">${attr.name || "未命名景点"}</div>
+                                        <div class="attraction-info">级别: ${attr.grade || attr.Grade || "未分级"}</div>
+                                        <div class="attraction-info">门票: ${attr.rate || "免费"}</div>
+                                    </div>
+                                </div>
+                            `;
+                            card.addEventListener("click", function () {
+                                // 点击卡片时定位到该景点
+                                view.goTo({
+                                    target: feature.geometry,
+                                    zoom: 15
+                                });
+                            });
+                            attractionList.appendChild(card);
+                            // 查询附件图片
+                            if (objectId) {
+                                attractionsLayer.queryAttachments({
+                                    objectIds: [objectId],
+                                    attachmentTypes: ["image/jpeg", "image/png", "image/gif"]
+                                }).then(function (attachmentsByFeatureId) {
+                                    const attachments = attachmentsByFeatureId[objectId];
+                                    const img = document.getElementById(`img-${objectId}`);
+                                    if (attachments && attachments.length > 0) {
+                                        img.src = attachments[0].url;
+                                    } else {
+                                        img.src = "../img/no-photo.png";
+                                    }
+                                }).catch(function () {
+                                    const img = document.getElementById(`img-${objectId}`);
+                                    if (img) img.src = "../img/no-photo.png";
+                                });
+                            }
+                        });
+
+                        // 应用筛选条件到图层
+                        attractionsLayer.definitionExpression = whereClause;
+                    } else {
+                        // 无筛选结果
+                        const noResults = document.createElement("div");
+                        noResults.className = "attraction-card";
+                        noResults.innerHTML = "<div class='attraction-name'>未找到匹配的景点</div>";
+                        attractionList.appendChild(noResults);
+
+                        // 重置图层筛选
+                        attractionsLayer.definitionExpression = "1=1";
+                    }
+                }).catch(function (error) {
+                    console.error("筛选出错:", error);
+                });
+            }
+
+            // 查找附近酒店功能
+            document.getElementById("findNearbyBtn").addEventListener("click", function () {
+                findNearbyHotels();
+            });
+
+            // 查找附近酒店
+            function findNearbyHotels() {
+                // 获取当前地图中心点
+                const center = view.center;
+                if (!center) {
+                    console.error("无法获取当前位置");
+                    return;
+                }
+
+                // 清空筛选结果列表
+                const attractionList = document.getElementById("attractionList");
+                attractionList.innerHTML = "";
+
+                // 更新侧边栏标题
+                document.querySelector(".filter-title").textContent = "附近酒店";
+
+                // 创建查询
+                const query = hotelsLayer.createQuery();
+                query.geometry = center;
+                query.distance = 5000; // 5公里范围内
+                query.units = "meters";
+                query.spatialRelationship = "intersects";
+                query.outFields = ["*"];
+                query.returnGeometry = true;
+
+                hotelsLayer.queryFeatures(query).then(function (results) {
+                    if (results.features.length > 0) {
+                        // 显示搜索结果
+                        results.features.forEach(function (feature) {
+                            const attr = feature.attributes;
+                            const objectId = attr.OBJECTID || attr.objectid;
+                            const card = document.createElement("div");
+                            card.className = "attraction-card";
+                            // 先插入图片容器
+                            card.innerHTML = `
+                                <div style=\"display:flex;align-items:center;gap:10px;\">
+                                    <img src=\"../img/loading.gif\" alt=\"图片\" class=\"attachment-photo\" style=\"width:48px;height:48px;object-fit:cover;border-radius:6px;\" id=\"hotel-img-nearby-${objectId}\">
+                                    <div>
+                                        <div class=\"attraction-name\">${attr.name || "未命名酒店"}</div>
+                                        <div class=\"attraction-info\">地区: ${attr.adname || "未知"}</div>
+                                        <div class=\"attraction-info\">电话: ${attr.tel || "未提供"}</div>
+                                    </div>
+                                </div>
+                            `;
+                            card.addEventListener("click", function () {
+                                // 点击卡片时定位到该酒店
+                                view.goTo({
+                                    target: feature.geometry,
+                                    zoom: 15
+                                });
+                            });
+                            attractionList.appendChild(card);
+                            // 查询附件图片
+                            if (objectId) {
+                                hotelsLayer.queryAttachments({
+                                    objectIds: [objectId],
+                                    attachmentTypes: ["image/jpeg", "image/png", "image/gif"]
+                                }).then(function (attachmentsByFeatureId) {
+                                    const attachments = attachmentsByFeatureId[objectId];
+                                    const img = document.getElementById(`hotel-img-nearby-${objectId}`);
+                                    if (attachments && attachments.length > 0) {
+                                        img.src = attachments[0].url;
+                                    } else {
+                                        img.src = "../img/no-photo.png";
+                                    }
+                                }).catch(function () {
+                                    const img = document.getElementById(`hotel-img-nearby-${objectId}`);
+                                    if (img) img.src = "../img/no-photo.png";
+                                });
+                            }
+                        });
+                    } else {
+                        // 无搜索结果
+                        const noResults = document.createElement("div");
+                        noResults.className = "attraction-card";
+                        noResults.innerHTML = "<div class='attraction-name'>附近没有找到酒店</div>";
+                        attractionList.appendChild(noResults);
+                    }
+                }).catch(function (error) {
+                    console.error("查询附近酒店出错:", error);
+                    const errorMsg = document.createElement("div");
+                    errorMsg.className = "attraction-card";
+                    errorMsg.innerHTML = "<div class='attraction-name'>查询出错，请重试</div>";
+                    attractionList.appendChild(errorMsg);
+                });
+
+                // 使用高德地图API查询附近酒店（备用方案）
+                // 这里可以添加使用高德地图API的周边搜索功能
+                // 如果需要，可以通过fetch调用高德地图API
+            }
+
+            // 添加清除查找记录功能
+            document.getElementById("clearResultsBtn").addEventListener("click", function () {
+                // 清空筛选结果列表
+                const attractionList = document.getElementById("attractionList");
+                attractionList.innerHTML = "";
+
+                // 重置筛选条件
+                filterCheckboxes.forEach(function (checkbox) {
+                    checkbox.checked = false;
+                });
+
+                // 重置图层筛选
+                attractionsLayer.definitionExpression = "1=1";
+
+                // 重置侧边栏标题
+                document.querySelector(".filter-title").textContent = "景点筛选";
+
+                // 清空搜索框
+                document.getElementById("searchInput").value = "";
+            });
+
+            // 添加筛选区域收放功能
+            document.getElementById("filterHeader").addEventListener("click", function () {
+                const filterContent = document.getElementById("filterContent");
+                const filterToggle = document.getElementById("filterToggle");
+
+                filterContent.classList.toggle("collapsed");
+                filterToggle.classList.toggle("collapsed");
+            });
+
+            // 确保筛选条件区域在页面加载时默认是展开的
+            window.addEventListener("DOMContentLoaded", function () {
+                const filterContent = document.getElementById("filterContent");
+                const filterToggle = document.getElementById("filterToggle");
+
+                // 移除折叠状态，确保内容可见
+                filterContent.classList.remove("collapsed");
+                filterToggle.classList.remove("collapsed");
+            });
+
+            // 照片模态框功能
+            const modal = document.getElementById("photoModal");
+            const modalImg = document.getElementById("modalImage");
+            const captionText = document.getElementById("modalCaption");
+            const closeModal = document.querySelector(".close-modal");
+
+            // 全局函数，用于显示模态框
+            window.showModal = function (imgSrc, caption) {
+                modal.style.display = "block";
+                modalImg.src = imgSrc;
+                captionText.innerHTML = caption;
+            }
+
+            // 点击关闭按钮关闭模态框
+            closeModal.onclick = function () {
+                modal.style.display = "none";
+            }
+
+            // 点击模态框外部关闭
+            window.onclick = function (event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
         });
     </script>
 </body>

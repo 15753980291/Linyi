@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css">
-    
+
     <style>
         body {
             margin: 0;
@@ -17,6 +17,126 @@
         #viewDiv {
             width: 100%;
             height: 100vh;
+        }
+
+        /* 弹出框照片样式 */
+        .popup-content {
+            display: flex;
+            flex-direction: column;
+            max-width: 100%;
+            min-width: 250px;
+        }
+
+        .popup-photo {
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .popup-photo img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .popup-photo img:hover {
+            transform: scale(1.05);
+        }
+
+        .popup-info {
+            font-size: 14px;
+        }
+
+        .popup-info p {
+            margin: 5px 0;
+        }
+
+        .loading-indicator {
+            padding: 20px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .no-photo {
+            padding: 20px;
+            color: #999;
+            font-style: italic;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+        }
+
+        .error-message {
+            padding: 10px;
+            color: #d9534f;
+            background-color: #f9f2f2;
+            border-radius: 5px;
+        }
+
+        .photo-gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .attachment-photo {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            margin: 2px;
+        }
+ 
+
+        /* 照片模态框样式 */
+        .photo-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            padding-top: 50px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+
+        .modal-content {
+            margin: auto;
+            display: block;
+            max-width: 90%;
+            max-height: 80%;
+        }
+
+        #modalCaption {
+            margin: auto;
+            display: block;
+            width: 80%;
+            max-width: 700px;
+            text-align: center;
+            color: white;
+            padding: 10px 0;
+            height: 150px;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .close-modal:hover,
+        .close-modal:focus {
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
         }
 
         .control-panel {
@@ -60,21 +180,28 @@
             font-size: 13px;
         }
     </style>
-    
+
 </head>
 
 <body>
+
     <div class="control-panel">
         <h3 style="margin-top:0;color:#1890ff">空间量算工具</h3>
         <button id="distanceBtn" class="control-btn">📏 距离量算</button>
         <button id="areaBtn" class="control-btn">📐 面积量算</button>
         <button id="clearBtn" class="control-btn">🗑️ 清除</button>
+        <button class="back-btn" onclick="window.history.back()">返回</button>
         <div id="instruction">请选择测量类型开始操作</div>
     </div>
-
     <div id="viewDiv"></div>
     <div class="result-panel" id="resultPanel">
         <span style="color:#1890ff">临沂文旅导航系统</span> | 测量结果将显示在这里
+    </div>
+    <!-- 照片模态框 -->
+    <div id="photoModal" class="photo-modal">
+        <span class="close-modal">&times;</span>
+        <img id="modalImage" class="modal-content">
+        <div id="modalCaption"></div>
     </div>
 
     <script src="https://js.arcgis.com/4.24/"></script>
@@ -88,16 +215,31 @@
             "esri/geometry/Polyline",
             "esri/geometry/Polygon",
             "esri/geometry/support/webMercatorUtils",
-            "esri/config"
+            "esri/config",
+            "esri/Basemap",
+            "esri/layers/WebTileLayer",
+            "esri/request"
         ], function (
             Map, MapView, FeatureLayer,
             GraphicsLayer, Graphic,
             Polyline, Polygon,
-            webMercatorUtils, esriConfig
+            webMercatorUtils, esriConfig,
+            Basemap, WebTileLayer, esriRequest
         ) {
+            // 创建高德地图瓦片图层
+            const gaodeLayer = new WebTileLayer({
+                urlTemplate: "https://webrd02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}",
+                copyright: "高德地图"
+            });
+
+            // 创建底图实例
+            const basemap = new Basemap({
+                baseLayers: [gaodeLayer]
+            });
+
             // 初始化地图
             const map = new Map({
-                basemap: "streets"
+                basemap: basemap
             });
 
             const view = new MapView({
@@ -112,11 +254,86 @@
 
             // 加载GeoScene景点图层
             const attractionsLayer = new FeatureLayer({
-                url: "https://www.geosceneonline.cn/server/rest/services/Hosted/临沂/FeatureServer/0",
+                url: "https://www.geosceneonline.cn/server/rest/services/Hosted/临沂景点/FeatureServer",
                 outFields: ["*"],
                 popupTemplate: {
                     title: "{name}",
-                    content: "景区特色：{feature}<br>景区级别：{Grade}"
+                    content: function(feature) {
+                        // 获取景点属性
+                        const attr = feature.graphic.attributes;
+                        const name = attr.name || "未命名景点";
+                        const objectId = attr.OBJECTID || attr.objectid;
+
+                        // 创建内容容器
+                        const contentDiv = document.createElement("div");
+                        contentDiv.className = "popup-content";
+
+                        // 创建照片容器
+                        const photoDiv = document.createElement("div");
+                        photoDiv.className = "popup-photo";
+                        photoDiv.innerHTML = `<div class="loading-indicator">正在加载照片...</div>`;
+                        contentDiv.appendChild(photoDiv);
+
+                        // 创建信息容器
+                        const infoDiv = document.createElement("div");
+                        infoDiv.className = "popup-info";
+                        infoDiv.innerHTML = `
+                            <p><strong>地址:</strong> ${attr.address || attr.addess || "未知"}</p>
+                            <p><strong>特色:</strong> ${attr.feature || "未知"}</p>
+                            <p><strong>景区级别:</strong> ${attr.Grade || attr.grade || "未分级"}</p>
+                            <p><strong>门票价格:</strong> ${attr.rate || "免费"}</p>
+                        `;
+                        contentDiv.appendChild(infoDiv);
+
+                        // 查询附件
+                        if (objectId) {
+                            console.log("要素ID:", objectId);
+
+                            // 使用FeatureLayer的queryAttachments方法查询附件
+                            attractionsLayer.queryAttachments({
+                                objectIds: [objectId],
+                                attachmentTypes: ["image/jpeg", "image/png", "image/gif"]
+                            }).then(function(attachmentsByFeatureId) {
+                                console.log("附件响应:", attachmentsByFeatureId);
+
+                                // 检查是否有附件
+                                if (attachmentsByFeatureId && Object.keys(attachmentsByFeatureId).length > 0) {
+                                    const attachments = attachmentsByFeatureId[objectId];
+
+                                    if (attachments && attachments.length > 0) {
+                                        const photoHtml = [];
+
+                                        // 创建照片幻灯片容器
+                                        photoHtml.push(`<div class="photo-gallery">`);
+
+                                        // 遍历所有附件
+                                        attachments.forEach(function(attachment) {
+                                            photoHtml.push(`<img src="${attachment.url}" alt="${name}" class="attachment-photo" onclick="showModal('${attachment.url}', '${name}')">`);
+                                        });
+
+                                        photoHtml.push(`</div>`);
+                                        photoDiv.innerHTML = photoHtml.join("");
+                                        return;
+                                    }
+                                }
+
+                                // 如果没有附件，显示没有照片的提示
+                                photoDiv.innerHTML = `<div class="no-photo">暂无照片</div>`;
+                            }).catch(function(error) {
+                                console.error("获取附件失败:", error);
+                                photoDiv.innerHTML = `<div class="error-message">照片加载失败</div>`;
+                            });
+                        } else {
+                            photoDiv.innerHTML = `<div class="no-photo">暂无照片</div>`;
+                        }
+
+                        return contentDiv;
+                    },
+                    actions: [{
+                        title: "从此点开始测量",
+                        id: "measure-from-here",
+                        className: "esri-icon-measure-line"
+                    }]
                 }
             });
             map.add(attractionsLayer);
@@ -302,12 +519,33 @@
             }
 
             // 初始化弹窗动作（用于景点直接测量）
-            attractionsLayer.popupTemplate.actions = [{
-                title: "从此点开始测量",
-                id: "measure-from-here",
-                className: "esri-icon-measure-line"
-            }];
+            // 注意：我们已经在popupTemplate中定义了actions
         });
+
+        // 照片模态框功能
+        const modal = document.getElementById("photoModal");
+        const modalImg = document.getElementById("modalImage");
+        const captionText = document.getElementById("modalCaption");
+        const closeModal = document.querySelector(".close-modal");
+
+        // 全局函数，用于显示模态框
+        window.showModal = function(imgSrc, caption) {
+            modal.style.display = "block";
+            modalImg.src = imgSrc;
+            captionText.innerHTML = caption;
+        }
+
+        // 点击关闭按钮关闭模态框
+        closeModal.onclick = function() {
+            modal.style.display = "none";
+        }
+
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
     </script>
 </body>
 
